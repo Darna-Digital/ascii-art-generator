@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import ColorPopover, { type ColorConfig } from "@/components/color-popover";
+import { exportSvg, exportPng } from "@/lib/export";
 
 export default function Home() {
   const [text, setText] = useState("");
@@ -14,6 +16,14 @@ export default function Home() {
   const [letterSpacing, setLetterSpacing] = useState(-1);
   const [lineHeight, setLineHeight] = useState(125);
   const [fontSize, setFontSize] = useState(14);
+  const [color, setColor] = useState<ColorConfig>({
+    mode: "solid",
+    solid: "#ffffff",
+    gradientFrom: "#3b82f6",
+    gradientTo: "#8b5cf6",
+    gradientAngle: 90,
+    bg: "black",
+  });
 
   const textRef = useRef(text);
   textRef.current = text;
@@ -68,6 +78,18 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const exportOpts = {
+    ascii,
+    text,
+    fontSize,
+    letterSpacing,
+    lineHeight,
+    color,
+    fontFamily: "Fira Mono",
+  };
+
+  const preRef = useRef<HTMLPreElement>(null);
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-neutral-950 px-4 py-16 font-mono text-white">
       <header className="mb-12 text-center">
@@ -88,7 +110,15 @@ export default function Home() {
 ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝╚═╝`}
         </pre>
         <p className="mt-4 text-sm text-neutral-600">
-          By Darna Digital
+          By{" "}
+          <a
+            href="https://darnadigital.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-neutral-500 underline hover:text-white transition-colors"
+          >
+            Darna Digital
+          </a>
         </p>
       </header>
 
@@ -181,25 +211,60 @@ export default function Home() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-neutral-600">Output</span>
             {ascii && (
-              <button
-                onClick={handleCopy}
-                className="rounded border border-neutral-800 px-3 py-1 text-xs text-neutral-500 transition-colors hover:border-neutral-600 hover:text-white"
-              >
-                {copied ? "Copied!" : "Copy"}
-              </button>
+              <div className="flex items-center gap-2">
+                <ColorPopover config={color} onChange={setColor} />
+                <button
+                  onClick={handleCopy}
+                  className="rounded border border-neutral-800 px-3 py-1.5 text-xs text-neutral-500 transition-colors hover:border-neutral-600 hover:text-white"
+                >
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+                <button
+                  onClick={() => exportSvg(exportOpts)}
+                  className="rounded border border-neutral-800 px-3 py-1.5 text-xs text-neutral-500 transition-colors hover:border-neutral-600 hover:text-white"
+                >
+                  SVG
+                </button>
+                <button
+                  onClick={() => exportPng(exportOpts)}
+                  className="rounded border border-neutral-800 px-3 py-1.5 text-xs text-neutral-500 transition-colors hover:border-neutral-600 hover:text-white"
+                >
+                  PNG
+                </button>
+              </div>
             )}
           </div>
-          <div className="overflow-x-auto rounded-lg bg-black p-6">
+          <div
+            className="overflow-x-auto rounded-lg p-6"
+            style={{
+              backgroundColor: color.bg === "transparent" ? "transparent" : color.bg,
+              backgroundImage:
+                color.bg === "transparent"
+                  ? "repeating-conic-gradient(#1a1a1a 0% 25%, #262626 0% 50%)"
+                  : "none",
+              backgroundSize: color.bg === "transparent" ? "16px 16px" : "auto",
+            }}
+          >
             {loading ? (
               <p className="animate-pulse text-neutral-600">Generating...</p>
+            ) : color.mode === "gradient" ? (
+              <AsciiSvg
+                ascii={ascii}
+                fontSize={fontSize}
+                letterSpacing={letterSpacing}
+                lineHeight={lineHeight}
+                color={color}
+              />
             ) : (
               <pre
-                className="text-white select-none whitespace-pre"
+                ref={preRef}
+                className="select-none whitespace-pre"
                 style={{
                   fontFamily: "var(--font-fira-mono)",
                   fontSize: `${fontSize}px`,
                   letterSpacing: `${letterSpacing}px`,
                   lineHeight: `${lineHeight}%`,
+                  color: color.solid,
                 }}
               >
                 {ascii}
@@ -209,5 +274,69 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+
+function AsciiSvg({
+  ascii,
+  fontSize,
+  letterSpacing,
+  lineHeight: lh,
+  color,
+}: {
+  ascii: string;
+  fontSize: number;
+  letterSpacing: number;
+  lineHeight: number;
+  color: ColorConfig;
+}) {
+  const lines = ascii.split("\n");
+  const lineHeightPx = fontSize * (lh / 100);
+  const charWidth = fontSize * 0.6 + letterSpacing;
+  const maxLen = Math.max(...lines.map((l) => l.length));
+  const width = Math.ceil(maxLen * charWidth) + 20;
+  const height = Math.ceil(lines.length * lineHeightPx) + 20;
+
+  const angle = color.gradientAngle;
+  const rad = (angle * Math.PI) / 180;
+  const x1 = 50 - 50 * Math.cos(rad);
+  const y1 = 50 - 50 * Math.sin(rad);
+  const x2 = 50 + 50 * Math.cos(rad);
+  const y2 = 50 + 50 * Math.sin(rad);
+
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      xmlns="http://www.w3.org/2000/svg"
+      className="select-none"
+    >
+      <defs>
+        <linearGradient
+          id="ascii-grad"
+          x1={`${x1.toFixed(1)}%`}
+          y1={`${y1.toFixed(1)}%`}
+          x2={`${x2.toFixed(1)}%`}
+          y2={`${y2.toFixed(1)}%`}
+        >
+          <stop offset="0%" stopColor={color.gradientFrom} />
+          <stop offset="100%" stopColor={color.gradientTo} />
+        </linearGradient>
+      </defs>
+      <text
+        fill="url(#ascii-grad)"
+        fontFamily="'Fira Mono', monospace"
+        fontSize={fontSize}
+        letterSpacing={letterSpacing}
+        xmlSpace="preserve"
+      >
+        {lines.map((line, i) => (
+          <tspan key={i} x="10" y={10 + (i + 1) * lineHeightPx}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </svg>
   );
 }

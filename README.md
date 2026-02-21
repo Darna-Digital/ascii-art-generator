@@ -1,6 +1,6 @@
 # ASCII Art Generator
 
-A minimalist ASCII art generator for Darna Digital open source projects.
+A minimalist ASCII art generator by [Darna Digital](https://darnadigital.com) for open source projects.
 
 Type text and instantly see it rendered as ASCII art using the ANSI Shadow font (and 325+ other figlet fonts).
 
