@@ -26,7 +26,7 @@ jobs:
           cache: pnpm
 
       - run: npx npm-check-updates -u --reject eslint
-      - run: pnpm install
+      - run: pnpm install --no-frozen-lockfile
       - run: pnpm lint
       - run: pnpm build
 
