@@ -37,7 +37,7 @@ importers:
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ~9.39.3
+        specifier: ^9
         version: 9.39.3(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6

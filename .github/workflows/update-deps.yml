@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm update --latest
+      - run: npx npm-check-updates -u --reject eslint
       - run: pnpm install
       - run: pnpm lint
       - run: pnpm build
