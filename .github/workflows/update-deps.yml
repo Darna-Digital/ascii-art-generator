@@ -23,7 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       - run: npx npm-check-updates -u --reject eslint
       - run: pnpm install --no-frozen-lockfile
