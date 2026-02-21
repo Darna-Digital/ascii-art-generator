@@ -1,4 +1,5 @@
 import type { ColorConfig } from "@/components/color-popover";
+import { fontFaceSvg } from "@/lib/font";
 
 export interface ExportOptions {
   ascii: string;
@@ -31,7 +32,8 @@ function buildSvg(opts: ExportOptions): { svg: string; width: number; height: nu
 
   const gradientId = "ascii-grad";
 
-  let defs = "";
+  const fontStyle = `<style>${fontFaceSvg()}</style>`;
+  let gradientDef = "";
   let fillAttr: string;
 
   if (opts.color.mode === "gradient") {
@@ -42,11 +44,13 @@ function buildSvg(opts: ExportOptions): { svg: string; width: number; height: nu
     const x2 = 50 + 50 * Math.cos(rad);
     const y2 = 50 + 50 * Math.sin(rad);
 
-    defs = `<defs><linearGradient id="${gradientId}" x1="${x1.toFixed(1)}%" y1="${y1.toFixed(1)}%" x2="${x2.toFixed(1)}%" y2="${y2.toFixed(1)}%"><stop offset="0%" stop-color="${opts.color.gradientFrom}"/><stop offset="100%" stop-color="${opts.color.gradientTo}"/></linearGradient></defs>`;
+    gradientDef = `<linearGradient id="${gradientId}" x1="${x1.toFixed(1)}%" y1="${y1.toFixed(1)}%" x2="${x2.toFixed(1)}%" y2="${y2.toFixed(1)}%"><stop offset="0%" stop-color="${opts.color.gradientFrom}"/><stop offset="100%" stop-color="${opts.color.gradientTo}"/></linearGradient>`;
     fillAttr = `url(#${gradientId})`;
   } else {
     fillAttr = opts.color.solid;
   }
+
+  const defs = `<defs>${fontStyle}${gradientDef}</defs>`;
 
   const escapedLines = lines
     .map((line, i) => {
@@ -66,7 +70,16 @@ function buildSvg(opts: ExportOptions): { svg: string; width: number; height: nu
       ? ""
       : `<rect width="100%" height="100%" fill="${bg === "white" ? "#ffffff" : "#000000"}"/>`;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${defs}${bgRect}<text fill="${fillAttr}" font-family="${opts.fontFamily}, monospace" font-size="${opts.fontSize}" letter-spacing="${opts.letterSpacing}" xml:space="preserve">${escapedLines}</text></svg>`;
+  const textStyle = [
+    `fill: ${fillAttr}`,
+    `font-family: '${opts.fontFamily}', monospace`,
+    `font-size: ${opts.fontSize}px`,
+    `letter-spacing: ${opts.letterSpacing}px`,
+    `line-height: ${opts.lineHeight}%`,
+    `white-space: pre`,
+  ].join("; ");
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">${defs}${bgRect}<text style="${textStyle}" xml:space="preserve">${escapedLines}</text></svg>`;
 
   return { svg, width, height };
 }
