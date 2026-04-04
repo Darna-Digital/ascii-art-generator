@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import figlet from "figlet";
+import figlet, { type FontName } from "figlet";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const selectedFont = (font as figlet.Fonts) || "ANSI Shadow";
+    const selectedFont = (font as FontName) || "ANSI Shadow";
     const lines = text.split("\n");
 
     const results = await Promise.all(
