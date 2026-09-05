@@ -25,9 +25,6 @@ export default function Home() {
     bg: "black",
   });
 
-  const textRef = useRef(text);
-  textRef.current = text;
-
   useEffect(() => {
     fetch("/api/fonts")
       .then((res) => res.json())
@@ -68,7 +65,7 @@ export default function Home() {
   const handleFontChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedFont = e.target.value;
     setFont(selectedFont);
-    generate(textRef.current, selectedFont);
+    generate(text, selectedFont);
   };
 
   const handleCopy = async () => {
